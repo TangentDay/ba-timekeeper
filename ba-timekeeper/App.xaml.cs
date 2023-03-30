@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
 
 namespace ba_timekeeper
@@ -14,7 +9,7 @@ namespace ba_timekeeper
     /// </summary>
     public partial class App : Application
     {
-        public static string TmpFilePath
+        public static string TmpDir
         {
             get
             {
@@ -24,7 +19,7 @@ namespace ba_timekeeper
                     throw new DirectoryNotFoundException("fail to get base directory");
                 }
 
-                return Path.Combine(appPath, "tmp.png");
+                return Path.Combine(appPath, "tmp");
             }
         }
     }
