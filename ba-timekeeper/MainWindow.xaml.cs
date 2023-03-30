@@ -30,5 +30,29 @@ namespace ba_timekeeper
             g.CopyFromScreen((int)rect.X, (int)rect.Y, 0, 0, bm.Size);
             bm.Save(filePath, ImageFormat.Png);
         }
+
+        private void RefreshTarget_Click(object sender, RoutedEventArgs e)
+        {
+            RefreshTargetList();
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            RefreshTargetList();
+        }
+
+        private void RefreshTargetList()
+        {
+            Refresh.IsEnabled = false;
+            Target.Items.Clear();
+            foreach (System.Diagnostics.Process p in System.Diagnostics.Process.GetProcesses())
+            {
+                if (p.MainWindowTitle.Length > 0)
+                {
+                    Target.Items.Add($"{p.ProcessName}: {p.MainWindowTitle}");
+                }
+            }
+            Refresh.IsEnabled = true;
+        }
     }
 }

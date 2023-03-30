@@ -6,23 +6,34 @@
         xmlns:local="clr-namespace:ba_timekeeper"
         mc:Ignorable="d"
         Title="MainWindow"
-        Height="250"
-        Width="300">
+        Height="500"
+        Width="300"
+        Loaded="Window_Loaded">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition />
+            <RowDefinition Height="1*" />
+            <RowDefinition Height="2*" />
         </Grid.RowDefinitions>
         <Menu>
             <MenuItem Header="ヘルプ(_H)" />
         </Menu>
         <Button x:Name="Capture"
                 Content="Capture"
-                Margin="70"
-                Grid.Row="1"
+                Margin="90,20"
+                Grid.Row="2"
                 Click="Capture_Click" />
+        <StackPanel Grid.Row="1">
+            <Label Content="Target Window" />
+            <ComboBox x:Name="Target"
+                      Grid.Row="1"
+                      d:ItemsSource="{d:SampleData ItemCount=5}"/>
+            <Button x:Name="Refresh"
+                    Content="refresh"
+                    Click="RefreshTarget_Click" />
+        </StackPanel>
     </Grid>
 </Window>
