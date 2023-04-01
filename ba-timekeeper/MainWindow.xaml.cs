@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
 using System.Windows;
 
 namespace ba_timekeeper
@@ -15,19 +16,60 @@ namespace ba_timekeeper
             InitializeComponent();
         }
 
+        [DllImport("user32.dll")]
+        private static extern bool GetWindowRect(IntPtr hwnd, out RECT lpRect);
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct RECT
+        {
+            public int left;
+            public int top;
+            public int right;
+            public int bottom;
+        }
+        [System.Runtime.InteropServices.DllImport("User32.dll")]
+        private extern static bool PrintWindow(IntPtr hwnd, IntPtr hDC, uint nFlags);
+
+
         private void Capture_Click(object sender, RoutedEventArgs e)
         {
-            var targetRect = new Rect(100, 200, 300, 400);
             var filePath = System.IO.Path.Combine(App.TmpDir, DateTime.Now.ToString("yyyyMMdd_hhmmss") + ".png");
-
-            CaptureScreen(targetRect, filePath);
+            var target = Target.SelectedItem.ToString();
+            IntPtr handle = new();
+            foreach (System.Diagnostics.Process p in System.Diagnostics.Process.GetProcesses())
+            {
+                if (target == $"{p.ProcessName}: {p.MainWindowTitle}")
+                {
+                    handle = p.MainWindowHandle;
+                }
+            }
+            CaptureWindow(handle, filePath);
         }
 
         private static void CaptureScreen(Rect rect, string filePath)
         {
-            using var bm = new Bitmap((int)rect.Width, (int)rect.Height);
-            using var g = Graphics.FromImage(bm);
+            using Bitmap bm = new((int)rect.Width, (int)rect.Height);
+            using Graphics g = Graphics.FromImage(bm);
             g.CopyFromScreen((int)rect.X, (int)rect.Y, 0, 0, bm.Size);
+            bm.Save(filePath, ImageFormat.Png);
+        }
+
+        private static void CaptureWindow(IntPtr handle, string filePath)
+        {
+            bool ok = GetWindowRect(handle, out RECT rect);
+            if (!ok)
+            {
+                return;
+            }
+
+            int width = rect.right - rect.left;
+            int height = rect.bottom - rect.top;
+            Bitmap bm = new(width, height);
+            Graphics g = Graphics.FromImage(bm);
+            IntPtr dc = g.GetHdc();
+            PrintWindow(handle, dc, 0);
+            g.ReleaseHdc(dc);
+            g.Dispose();
             bm.Save(filePath, ImageFormat.Png);
         }
 
