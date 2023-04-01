@@ -30,7 +30,17 @@
             <Label Content="Target Window" />
             <ComboBox x:Name="Target"
                       Grid.Row="1"
-                      d:ItemsSource="{d:SampleData ItemCount=5}"/>
+                      SelectedValuePath="MainWindowHandle">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <WrapPanel>
+                            <TextBlock Text="{Binding ProcessName}" />
+                            <TextBlock Text=": " />
+                            <TextBlock Text="{Binding MainWindowTitle}" />
+                        </WrapPanel>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
             <Button x:Name="Refresh"
                     Content="refresh"
                     Click="RefreshTarget_Click" />

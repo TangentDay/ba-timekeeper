@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
@@ -34,15 +35,7 @@ namespace ba_timekeeper
         private void Capture_Click(object sender, RoutedEventArgs e)
         {
             var filePath = System.IO.Path.Combine(App.TmpDir, DateTime.Now.ToString("yyyyMMdd_hhmmss") + ".png");
-            var target = Target.SelectedItem.ToString();
-            IntPtr handle = new();
-            foreach (System.Diagnostics.Process p in System.Diagnostics.Process.GetProcesses())
-            {
-                if (target == $"{p.ProcessName}: {p.MainWindowTitle}")
-                {
-                    handle = p.MainWindowHandle;
-                }
-            }
+            IntPtr handle = (IntPtr)Target.SelectedValue;
             CaptureWindow(handle, filePath);
         }
 
@@ -91,7 +84,7 @@ namespace ba_timekeeper
             {
                 if (p.MainWindowTitle.Length > 0)
                 {
-                    Target.Items.Add($"{p.ProcessName}: {p.MainWindowTitle}");
+                    Target.Items.Add(p);
                 }
             }
             Refresh.IsEnabled = true;
