@@ -1,9 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using System.Windows;
+using Windows.Storage;
+using Windows.Storage.Streams;
+using Windows.Graphics.Imaging;
 
 namespace ba_timekeeper
 {
@@ -34,9 +36,10 @@ namespace ba_timekeeper
 
         private void Capture_Click(object sender, RoutedEventArgs e)
         {
-            var filePath = System.IO.Path.Combine(App.TmpDir, DateTime.Now.ToString("yyyyMMdd_hhmmss") + ".png");
+            var filePath = System.IO.Path.Combine(App.TmpDir, DateTime.Now.ToString("yyyyMMdd_hhmmss") + ".bmp");
             IntPtr handle = (IntPtr)Target.SelectedValue;
             CaptureWindow(handle, filePath);
+
         }
 
         private static void CaptureScreen(Rect rect, string filePath)
@@ -44,7 +47,7 @@ namespace ba_timekeeper
             using Bitmap bm = new((int)rect.Width, (int)rect.Height);
             using Graphics g = Graphics.FromImage(bm);
             g.CopyFromScreen((int)rect.X, (int)rect.Y, 0, 0, bm.Size);
-            bm.Save(filePath, ImageFormat.Png);
+            bm.Save(filePath, ImageFormat.Bmp);
         }
 
         private static void CaptureWindow(IntPtr handle, string filePath)
@@ -55,15 +58,13 @@ namespace ba_timekeeper
                 return;
             }
 
-            int width = rect.right - rect.left;
-            int height = rect.bottom - rect.top;
-            Bitmap bm = new(width, height);
+            Bitmap bm = new(rect.right - rect.left, rect.bottom - rect.top);
             Graphics g = Graphics.FromImage(bm);
             IntPtr dc = g.GetHdc();
             PrintWindow(handle, dc, 0);
             g.ReleaseHdc(dc);
             g.Dispose();
-            bm.Save(filePath, ImageFormat.Png);
+            bm.Save(filePath, ImageFormat.Bmp);
         }
 
         private void RefreshTarget_Click(object sender, RoutedEventArgs e)
