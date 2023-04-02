@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Title="MainWindow"
         Height="500"
-        Width="300"
+        Width="600"
         Loaded="Window_Loaded">
     <Grid>
         <Grid.ColumnDefinitions>
@@ -16,16 +16,18 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="1*" />
+            <RowDefinition Height="1*" />
             <RowDefinition Height="2*" />
         </Grid.RowDefinitions>
-        <Menu>
+        <Menu Margin="0,0,0,155"
+              Grid.RowSpan="2">
             <MenuItem Header="ヘルプ(_H)" />
         </Menu>
         <Button x:Name="Capture"
                 Content="Capture"
-                Margin="90,20"
+                Margin="40"
                 Grid.Row="2"
-                Click="Capture_Click" />
+                Click="Capture_Click"/>
         <StackPanel Grid.Row="1">
             <Label Content="Target Window" />
             <ComboBox x:Name="Target"
@@ -44,6 +46,12 @@
             <Button x:Name="Refresh"
                     Content="refresh"
                     Click="RefreshTarget_Click" />
+        </StackPanel>
+        <StackPanel Grid.Row="3">
+            <Label Content="Result" />
+            <TextBlock x:Name="Result"
+                       TextWrapping="Wrap"
+                       d:Text="Recognized Result" />
         </StackPanel>
     </Grid>
 </Window>

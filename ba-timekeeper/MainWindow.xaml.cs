@@ -2,10 +2,12 @@
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using System.Windows;
+using Windows.Graphics.Imaging;
+using Windows.Media.Ocr;
 using Windows.Storage;
 using Windows.Storage.Streams;
-using Windows.Graphics.Imaging;
 
 namespace ba_timekeeper
 {
@@ -14,9 +16,13 @@ namespace ba_timekeeper
     /// </summary>
     public partial class MainWindow : Window
     {
+
+        OcrEngine ocrEngine;
+
         public MainWindow()
         {
             InitializeComponent();
+            ocrEngine = OcrEngine.TryCreateFromUserProfileLanguages();
         }
 
         [DllImport("user32.dll")]
@@ -34,37 +40,70 @@ namespace ba_timekeeper
         private extern static bool PrintWindow(IntPtr hwnd, IntPtr hDC, uint nFlags);
 
 
-        private void Capture_Click(object sender, RoutedEventArgs e)
+        private async void Capture_Click(object sender, RoutedEventArgs e)
         {
-            var filePath = System.IO.Path.Combine(App.TmpDir, DateTime.Now.ToString("yyyyMMdd_hhmmss") + ".bmp");
-            IntPtr handle = (IntPtr)Target.SelectedValue;
-            CaptureWindow(handle, filePath);
+            try
+            {
+                IntPtr handle = (IntPtr)Target.SelectedValue;
+                var bmp = CaptureWindow(handle);
 
+                var sofBmp = await ConvertSoftwareBmp(bmp);
+
+                var ocrResult = await RecognizeText(sofBmp);
+
+                Result.Text = ocrResult.Text;
+            }
+            catch (Exception ex)
+            {
+                MsgBox.ShowErr(ex.ToString());
+            }
+        }
+
+        private async Task<OcrResult> RecognizeText(SoftwareBitmap sofBmp)
+        {
+            var ocrResult = await ocrEngine.RecognizeAsync(sofBmp);
+            return ocrResult;
+        }
+
+        private static async Task<SoftwareBitmap> ConvertSoftwareBmp(Bitmap bmp)
+        {
+            var fileName = DateTime.Now.ToString("yyyyMMdd_hhmmss") + ".bmp";
+            var filePath = System.IO.Path.Combine(App.TmpDir, fileName);
+            bmp.Save(filePath, ImageFormat.Bmp);
+            StorageFolder appFolder = await StorageFolder.GetFolderFromPathAsync(App.TmpDir);
+            var bmpFile = await appFolder.GetFileAsync(fileName);
+            SoftwareBitmap sofBmp;
+
+            using (IRandomAccessStream stream = await bmpFile.OpenAsync(FileAccessMode.Read))
+            {
+                BitmapDecoder decoder = await BitmapDecoder.CreateAsync(stream);
+                sofBmp = await decoder.GetSoftwareBitmapAsync();
+            }
+            return sofBmp;
         }
 
         private static void CaptureScreen(Rect rect, string filePath)
         {
-            using Bitmap bm = new((int)rect.Width, (int)rect.Height);
-            using Graphics g = Graphics.FromImage(bm);
-            g.CopyFromScreen((int)rect.X, (int)rect.Y, 0, 0, bm.Size);
-            bm.Save(filePath, ImageFormat.Bmp);
+            using Bitmap bmp = new((int)rect.Width, (int)rect.Height);
+            using Graphics g = Graphics.FromImage(bmp);
+            g.CopyFromScreen((int)rect.X, (int)rect.Y, 0, 0, bmp.Size);
+            bmp.Save(filePath, ImageFormat.Bmp);
         }
 
-        private static void CaptureWindow(IntPtr handle, string filePath)
+        private static Bitmap CaptureWindow(IntPtr handle)
         {
             bool ok = GetWindowRect(handle, out RECT rect);
             if (!ok)
             {
-                return;
+                throw new Exception("fail to get window rect");
             }
-
-            Bitmap bm = new(rect.right - rect.left, rect.bottom - rect.top);
-            Graphics g = Graphics.FromImage(bm);
+            Bitmap bmp = new(rect.right - rect.left, rect.bottom - rect.top);
+            Graphics g = Graphics.FromImage(bmp);
             IntPtr dc = g.GetHdc();
             PrintWindow(handle, dc, 0);
             g.ReleaseHdc(dc);
             g.Dispose();
-            bm.Save(filePath, ImageFormat.Bmp);
+            return bmp;
         }
 
         private void RefreshTarget_Click(object sender, RoutedEventArgs e)
